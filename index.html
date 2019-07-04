@@ -3,4 +3,211 @@
   type="text/html"
   data="/.netlify/functions/server"
   style="width:100%;height:100%;"
->
+> 
+
+
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Health and Safety - Postit note saver</title>
+     <style type="text/css">
+      body {
+         background-color: #e6e6e6e6;
+         padding:50px;
+         font-size: 22pt;
+         font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      }
+
+      button{
+         font-size: 50pt;
+         background: rgb(28, 184, 65);
+         color: white;
+         text-shadow: -1px 0 green, 0 1px green, 1px 0 green, 0 -1px green;
+         padding: 10px;
+      }
+
+      select{
+         font-size: 40pt;
+         background:#2e2e2e;
+         color: white;
+         padding: 10px;
+      }
+
+      .login {
+         margin-top: 10px;
+         font-size: 50pt;
+         width:100%;
+      }
+
+      .healthHeader {
+         background-color:red;
+         color: white;
+         padding:20px;
+         border-radius: 10px;
+         border: #666666 solid 2px;
+         margin-top: 20px;
+       }
+
+       .safetyHeader {
+         margin-top: 10px;
+         background-color:green;
+         color: white;
+         padding:20px;
+         border-radius: 10px;
+         border: #666666 solid 2px;
+       }
+
+      .health {
+         background-color:red;
+         font-size: 40pt;
+         height: 70px;
+         width: 70px;
+         color: white;
+         text-align: center;
+         padding-top: 20px;
+         border-radius: 10px;
+      }
+
+
+
+      .safety {
+         background-color:green;
+         font-size: 40pt;
+         height: 70px;
+         width: 70px;
+         color: white;
+         text-align: center;
+         border-radius: 10px;
+         padding-top: 20px;
+      }
+
+      .postit {
+         font-size: 22pt;
+         height: 30px;
+         width: 30px;
+         color: black;
+         text-align: center;
+         border-radius: 10px;
+
+      }
+
+      .flex-container {
+  display: flex;
+  align-items: stretch;
+  background-color: #f1f1f1;
+}
+
+.flex-container>div {
+  background-color: DodgerBlue;
+  color: white;
+  width: 100px;
+  margin: 10px;
+  text-align: center;
+  line-height: 75px;
+  font-size: 30px;
+}
+      </style>
+   </head>
+   
+   <script src = "/socket.io/socket.io.js"></script>
+   <script src= "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+   <script>
+      var header = '<h1>Health and Safety - Postit note saver</h1>'
+      var reminderText = '<div class="healthHeader"><h2>Health</h2>\
+      <p>How well do you belive the last iteration went?</p></div>\
+      <div class="safetyHeader"><h2>Safety</h2>\
+      <p>How safe do you feel in this meeting place?</p></div>' 
+
+      var selects = '<select id="healthsafety">\
+            <option value="health">Health</option>\
+            <option value="safety">Safety</option>\
+         </select>\
+         <select id="score">\
+            <option value="5">5</option>\
+            <option value="4">4</option>\
+            <option value="3">3</option>\
+            <option value="2">2</option>\
+            <option value="1">1</option>\
+            </select>'
+
+      var reorderButton = '<button type ="button" name = "reorder" onclick = "reorder()">reorder</button>'
+
+
+            var socket = io();
+      function setUsername() {
+         socket.emit('setUsername', uuidv4())//document.getElementById('name').value)
+      };
+      function uuidv4() {
+         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+         return v.toString(16);
+         });
+      }
+
+      var user;
+      socket.on('userExists', function(data) {
+         document.getElementById('error-container').innerHTML = data;
+      });
+      socket.on('userSet', function(data) {
+         user = data.username;
+         document.body.innerHTML = header + selects + '\
+         <button type = "button" name = "button" onclick = "sendMessage()">Send</button>\
+         <div class="" id = "message-container"></div>\
+         <div id = "healthView"></div>\
+         ' + reminderText + reorderButton
+
+      });
+      function sendMessage() {
+         var msg = document.getElementById('score').value;
+         var scr = document.getElementById('score').value;
+         var hs = document.getElementById('healthsafety').value;
+         if(msg) {
+            socket.emit('msg', {message: msg, user: user, score: scr, healthsafety: hs});
+         }
+      }
+
+      function reorder() {
+         $('.health').prependTo('#message-container');
+         console.log("sa")
+      }
+
+      socket.on('newmsg', function(data) {
+         var postit = data.healthsafety
+        
+         if(user) {
+            document.getElementById('message-container').innerHTML += 
+            '<div class=' + postit + '>' + data.score + '</div>'
+         }
+      })
+   </script>
+   
+   <body>
+      <div id = "error-container"></div>
+      <h1>Health and Safety - Postit note saver</h1>
+      
+     
+      <div class="healthHeader">
+      <h2>Health</h2>
+      <p>How well do you belive the last iteration went?</p>
+      </div>
+
+      <div class="safetyHeader">
+      <h2>Safety</h2>
+      <p>How safe do you feel in this meeting place?</p>
+      <p>
+         <ul>
+     <li>5 – No Problem, I’ll talk about anything</li>
+     <li>4 – I’ll talk about almost anything; a few things might be hard</li>
+     <li>3 – I’ll talk about some things, but others will be hard to say</li>
+     <li>2 – I’m not going to say much, I’ll let others bring up issues</li>
+     <li>1 – I’m really not comfortable </li>
+</ul>      
+</p>
+   </div>
+
+   <button type = "button" name = "button" class="login" onclick = "setUsername()">
+         Login anonymously
+      </button>
+
+   </body>
+</html>
